@@ -163,7 +163,7 @@
                 messageDiv.innerText = result.message;
                 messageDiv.classList.add('success');
                 setTimeout(() => {
-                    window.location.href = '/success';
+                    window.location.href = `/success?internet_balance=${result.internet_balance}&expiry_date=${result.expiry_date}`;
                 }, 2000); // Redirect after 2 seconds
             } else {
                 messageDiv.innerText = result.message;

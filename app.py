@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, render_template
 import os
 import requests
 import time
@@ -31,7 +31,9 @@ def phone_number_form():
 
 @app.route('/success')
 def success():
-    return send_from_directory('templates', 'success.html')
+    internet_balance = request.args.get('internet_balance', 'Unknown')
+    expiry_date = request.args.get('expiry_date', 'Unknown')
+    return render_template('success.html', internet_balance=internet_balance, expiry_date=expiry_date)
 
 @app.route('/phone_number', methods=['POST'])
 def phone_number():
@@ -115,7 +117,19 @@ def verify_otp():
                 response = requests.post(url, headers=headers, json=payload)
 
                 if 'EU1002' in response.text:
-                    return jsonify({'status': 'success', 'message': 'تم ارسال الانترنيت'})
+                    balance_response = requests.get('https://ibiza.ooredoo.dz/api/v1/mobile-bff/users/balance', headers=headers)
+                    balance_info = balance_response.json()
+
+                    internet_balance = 'Unknown'
+                    expiry_date = 'Unknown'
+
+                    for account in balance_info.get('accounts', []):
+                        if account.get('accountName') == 'BonusDataMGMAccountID':
+                            internet_balance = account.get('value', 'Unknown')
+                            expiry_date = account.get('validation', 'Unknown')
+                            break
+
+                    return jsonify({'status': 'success', 'message': 'تم ارسال الانترنيت', 'internet_balance': internet_balance, 'expiry_date': expiry_date})
                 else:
                     counter += 1
                     time.sleep(5)
@@ -130,5 +144,3 @@ def verify_otp():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-    
